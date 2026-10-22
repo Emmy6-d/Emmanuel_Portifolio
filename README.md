@@ -69,6 +69,25 @@ the frontend environment. Contact notifications require the SMTP variables; if
 SMTP is unavailable, submitted messages remain accessible in the admin Contacts
 section.
 
+## Deployment: Vercel frontend and Render API
+
+For the Vercel project, set `VITE_API_URL` to the Render backend's public origin,
+for example `https://your-api-service.onrender.com` (no `/api` suffix and no
+trailing slash). Set it for the Production environment, then redeploy the
+frontend; Vite environment variables are embedded at build time.
+
+For the Render web service, set `CORS_ORIGINS` to a comma-separated list of
+allowed frontend origins, for example
+`https://emmanuel-emmy7.vercel.app,https://your-custom-domain.example` (origins
+only, with no path). Then redeploy the backend. The local development origins
+remain the default if this variable is omitted.
+
+Verify the Render service directly at
+`https://your-api-service.onrender.com/api/health`; it should return JSON with
+`"status": "ok"`. If that endpoint works but the frontend still reports a fetch
+error, check the browser console's Network and Console tabs for a CORS message
+and confirm both environment variables match the deployed URLs.
+
 ## Portfolio and media management
 
 The admin dashboard manages the profile, experiences, projects, education,
