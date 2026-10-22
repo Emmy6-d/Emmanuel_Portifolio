@@ -1,55 +1,108 @@
-# Emmanuel Portfolio
+# Emmanuel Dushimimana — Portfolio
 
-Dynamic React/Vite frontend with a FastAPI and Supabase backend.
+A React/Vite portfolio backed by a FastAPI API and Supabase. Public pages read
+portfolio content from the database; content is managed through the protected
+admin dashboard.
 
-## Structure
+## Project structure
 
 ```text
-frontend/   React application and styles
-backend/    Supabase-backed FastAPI API and SQL schema
+frontend/       React app, Vite config, and static assets
+backend/        FastAPI application, tests, and pinned dependencies
+supabase/       Database schema and intentionally empty seed file
+docs/           Architecture overview
 ```
 
-## Run locally
+See [`docs/architecture.md`](./docs/architecture.md) for the request and data-flow diagram.
 
-Install frontend dependencies and start Vite:
+## Screenshots
 
-```powershell
-cd frontend
-npm install
-npm run dev
-```
+| Home | Projects | Admin sign-in |
+|---|---|---|
+| ![Home page](./docs/screenshots/home.png) | ![Projects page](./docs/screenshots/projects.png) | ![Admin sign-in page](./docs/screenshots/admin.png) |
 
-In another terminal, install backend dependencies and start FastAPI:
+## Requirements
+
+- Node.js 22 or newer and npm
+- Python 3.12 or newer
+- A Supabase project
+
+## Local setup
+
+Copy `backend/.env.example` to `backend/.env` and fill in your private Supabase
+credentials, admin token, and (optionally) SMTP settings. Copy
+`frontend/.env.example` to `frontend/.env` if the API is hosted separately;
+`VITE_API_URL` should be the API origin without a trailing slash. Leave it empty
+for local development, where Vite proxies `/api` to FastAPI.
+
+Run the Supabase schema from [`supabase/schema.sql`](./supabase/schema.sql) in
+the Supabase SQL Editor before starting the API. The SQL file creates tables,
+policies, and storage configuration but does not insert portfolio content.
+[`supabase/seed.sql`](./supabase/seed.sql) is intentionally empty of data.
+Create the profile and portfolio records through the admin dashboard.
+
+Start the backend in one terminal:
 
 ```powershell
 cd backend
-pip install -r requirements.txt
-uvicorn main:app --reload --port 8000
+python -m venv ..\.venv
+..\.venv\Scripts\python.exe -m pip install -r requirements.txt
+..\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000
 ```
 
-The frontend requires the backend. It loads all profile, experience, project, education, skill, certification, language, and contact data from Supabase through `/api/portfolio` and the CRUD API. It does not contain fallback portfolio data.
+Start the frontend in another terminal:
 
-## Supabase
-
-Run [`backend/supabase_schema.sql`](./backend/supabase_schema.sql) in the Supabase SQL Editor to create or update the schema. Configure these values in `backend/.env`:
-
-```env
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your-server-only-key
-PORTFOLIO_ADMIN_TOKEN=your-private-admin-token
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USERNAME=your-sending-email@example.com
-SMTP_PASSWORD=your-smtp-password-or-app-password
-SMTP_FROM_EMAIL=your-sending-email@example.com
-CONTACT_NOTIFICATION_EMAIL=your-receiving-email@example.com
-SMTP_USE_TLS=true
+```powershell
+cd frontend
+npm ci
+npm run dev
 ```
 
-Never expose the service-role key in the frontend.
+Open `http://localhost:5173`. The admin dashboard is at
+`http://localhost:5173/#admin`; sign in with `PORTFOLIO_ADMIN_TOKEN`.
 
-When someone submits the public contact form, the message is saved in Supabase and an email notification is sent to `CONTACT_NOTIFICATION_EMAIL`. The form clears immediately after submission. Visitors see a large green confirmation when their message is received, or a red error that explains why it could not be sent; either message disappears after ten seconds. The visitor’s form email is included as `Reply-To` on your notification, so replying from your inbox goes directly to that person. The SMTP sender must be an account you control; using the visitor’s address as the technical `From` address would be rejected or treated as spoofing by most providers. For Gmail, use a Google app password rather than your normal account password. If SMTP is not configured or temporarily fails, the message remains available in the admin Contacts section.
+## Configuration
 
-## Admin dashboard
+Backend variables are documented in [`backend/.env.example`](./backend/.env.example).
+The Supabase service-role key must remain server-side and must never be placed in
+the frontend environment. Contact notifications require the SMTP variables; if
+SMTP is unavailable, submitted messages remain accessible in the admin Contacts
+section.
 
-With both servers running, open `http://localhost:5173/#admin`. Enter the `PORTFOLIO_ADMIN_TOKEN` value to manage profile data, experiences, projects, education, skills, certifications, languages, contact messages, and the home-page profile image. Experience records include an optional achievement summary, a company logo, and up to four gallery images. Upload or replace a company logo and it appears beside the company name on the experience list and detail page; deleting the logo removes it from both. Logos and gallery images are limited to 5 MB per image and stored in the public `portfolio-media` Supabase Storage bucket. The SQL schema creates that bucket and its read policy, and adds the logo fields to existing experience tables.
+## Portfolio and media management
+
+The admin dashboard manages the profile, experiences, projects, education,
+skills, certifications, languages, and contact messages. Experience entries can
+include an optional achievement summary, a company logo, and up to four gallery
+images. Logos display beside the company name on the experience list and detail
+page; absent logos do not reserve space. Uploaded media is stored in the public
+`portfolio-media` Supabase Storage bucket, with a 5 MB per-image limit.
+
+The public contact form clears on submission and shows success or explanatory
+error feedback for ten seconds. Successful submissions are saved to Supabase;
+email notifications are sent when SMTP is configured.
+
+## Quality checks
+
+From `frontend/`:
+
+```powershell
+npm run lint
+npm test
+npm run build
+```
+
+From `backend/`:
+
+```powershell
+..\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+..\.venv\Scripts\ruff.exe check app tests
+..\.venv\Scripts\python.exe -m pytest
+```
+
+GitHub Actions runs the frontend lint, test, and production build checks and the
+backend Ruff and pytest checks on pushes and pull requests.
+
+## License
+
+Released under the [MIT License](./LICENSE).

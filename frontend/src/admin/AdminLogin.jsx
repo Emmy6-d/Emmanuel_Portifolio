@@ -1,0 +1,3 @@
+import { ArrowUpRight } from 'lucide-react'
+
+export function AdminLogin({ value, setValue, error, submit }) { return <section className="admin-login shell"><div className="eyebrow">Private area</div><h1>Admin<br /><em>sign in.</em></h1><p>Use the value configured as <code>PORTFOLIO_ADMIN_TOKEN</code> on the backend.</p><form onSubmit={submit}><label>Admin token<input type="password" value={value} onChange={(event) => setValue(event.target.value)} required autoFocus /></label><button className="button button-dark">Open dashboard <ArrowUpRight size={16} /></button></form>{error && <div className="admin-alert error">{error}</div>}</section> }

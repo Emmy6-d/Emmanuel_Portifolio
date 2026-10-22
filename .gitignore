@@ -4,6 +4,15 @@ dist/
 .venv/
 __pycache__/
 *.pyc
+.pytest_cache/
+.ruff_cache/
+.coverage
 .env
+*.env
+*.env.*
+!.env.example
+.DS_Store
+.idea/
+.vscode/
 *.log
 backend/portfolio.db

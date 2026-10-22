@@ -1,0 +1,2 @@
+-- Portfolio records are intentionally not seeded.
+-- Add content through the protected admin dashboard after creating the schema.

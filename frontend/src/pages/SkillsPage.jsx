@@ -1,0 +1,3 @@
+import { Intro } from '../components/Intro.jsx'
+
+export function SkillsPage({ data }) { return <><Intro number="02" title="Technical skills." /><section className="skills-page shell"><div className="skill-groups">{(data.skill_groups || []).map((group) => <article className="skill-group" key={group.name}><div className="project-type">Skill group</div><h2>{group.name}</h2><div className="skill-list">{group.skills.map((skill) => <span key={skill.id || skill.value}>{skill.value}</span>)}</div></article>)}</div><div className="growth-panel"><div className="eyebrow">Growth areas</div><div className="growth-list">{data.growth_areas.map((area) => <span key={area}>{area}</span>)}</div></div></section></> }

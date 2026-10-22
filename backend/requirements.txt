@@ -1,6 +1,6 @@
-fastapi
-uvicorn
-pydantic[email]
-supabase
-python-dotenv
-python-multipart
+fastapi==0.146.0
+uvicorn==0.54.0
+pydantic[email]==2.14.1
+supabase==2.33.0
+python-dotenv==1.2.4
+python-multipart==0.0.32
