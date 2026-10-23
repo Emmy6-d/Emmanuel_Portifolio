@@ -44,3 +44,23 @@ def send_contact_notification(message: ContactMessage) -> bool:
         f"Message:\n{message.message}\n"
     )
     return deliver_email(email)
+
+
+def send_contact_acknowledgement(message: ContactMessage) -> bool:
+    if not SMTP_HOST or not SMTP_FROM_EMAIL:
+        logger.warning("Contact acknowledgement email is not configured")
+        return False
+
+    email = EmailMessage()
+    email["Subject"] = "Thanks for reaching out"
+    email["From"] = f"Emmanuel <{SMTP_FROM_EMAIL}>"
+    email["To"] = str(message.email)
+    email["Reply-To"] = SMTP_FROM_EMAIL
+    email.set_content(
+        f"Hi {message.name},\n\n"
+        "Thank you for getting in touch through my portfolio. "
+        "I've received your message and will get back to you as soon as I can.\n\n"
+        "Best,\n"
+        "Emmanuel\n"
+    )
+    return deliver_email(email)

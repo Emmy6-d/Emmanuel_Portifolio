@@ -65,9 +65,10 @@ Open `http://localhost:5173`. The admin dashboard is at
 
 Backend variables are documented in [`backend/.env.example`](./backend/.env.example).
 The Supabase service-role key must remain server-side and must never be placed in
-the frontend environment. Contact notifications require the SMTP variables; if
-SMTP is unavailable, submitted messages remain accessible in the admin Contacts
-section.
+the frontend environment. Set `SMTP_HOST` and `SMTP_FROM_EMAIL` to send visitor
+acknowledgements, and also set `CONTACT_NOTIFICATION_EMAIL` to receive owner
+notifications. If SMTP is unavailable, submitted messages remain accessible in
+the admin Contacts section.
 
 ## Deployment: Vercel frontend and Render API
 
@@ -99,7 +100,8 @@ page; absent logos do not reserve space. Uploaded media is stored in the public
 
 The public contact form clears on submission and shows success or explanatory
 error feedback for ten seconds. Successful submissions are saved to Supabase;
-email notifications are sent when SMTP is configured.
+an email notification is sent to the portfolio owner and an acknowledgement
+is sent to the visitor when SMTP is configured.
 
 ## Quality checks
 

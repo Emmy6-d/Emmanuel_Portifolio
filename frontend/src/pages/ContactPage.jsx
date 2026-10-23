@@ -37,8 +37,13 @@ export function ContactPage({ data }) {
 
     setIsSubmitting(true)
     try {
-      await request('/contact', { method: 'POST', body: JSON.stringify(values) })
-      showFeedback('success', 'Thank you for contacting me. I have received your message and will reply shortly.')
+      const result = await request('/contact', { method: 'POST', body: JSON.stringify(values) })
+      showFeedback(
+        'success',
+        result.acknowledgement_sent
+          ? 'Thank you for contacting me. I have received your message and sent a confirmation to your email. I will reply as soon as I can.'
+          : 'Thank you for contacting me. I have received your message and will reply as soon as I can.',
+      )
     } catch (reason) {
       const detail = reason instanceof Error ? reason.message : String(reason)
       showFeedback('error', `Sorry, your message couldn't be sent. ${detail}`)

@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException
 from app.core.config import supabase
 from app.schemas import ContactMessage
 from app.services.data import normalize_row, rows, skill_groups
-from app.services.email import send_contact_notification
+from app.services.email import send_contact_acknowledgement, send_contact_notification
 
 router = APIRouter()
 
@@ -28,7 +28,13 @@ def get_portfolio():
 def create_contact(message: ContactMessage):
     supabase.table("contacts").insert(message.model_dump()).execute()
     email_sent = send_contact_notification(message)
-    return {"ok": True, "email_sent": email_sent, "message": f"Thanks, {message.name}. Your message was received."}
+    acknowledgement_sent = send_contact_acknowledgement(message)
+    return {
+        "ok": True,
+        "email_sent": email_sent,
+        "acknowledgement_sent": acknowledgement_sent,
+        "message": f"Thanks, {message.name}. Your message was received.",
+    }
 
 
 @router.get("/api/health")
