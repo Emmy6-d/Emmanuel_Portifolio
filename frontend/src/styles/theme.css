@@ -22,7 +22,7 @@ body { font-family: var(--font-sans); transition: background-color .25s ease, co
 .nav-links button.active::after { content: ''; display: block; height: 2px; background: var(--accent); margin-top: 5px; }
 .project-image, .home-profile-image, .experience-gallery img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .project-image { aspect-ratio: 16 / 10; }
-.home-profile-image { position: absolute; inset: 0; z-index: 1; }
+.home-profile-image { position: absolute; top: 8%; right: 5%; bottom: 8%; left: auto; width: 52%; height: 84%; border-radius: 18px; object-fit: cover; z-index: 1; box-shadow: 0 18px 35px rgba(23, 33, 29, .2); }
 .hero-art > *:not(.home-profile-image) { z-index: 2; }
 :root[data-theme='dark'] .nav-wrap { background: rgba(16, 23, 20, .9); }
 :root[data-theme='dark'] .hero-art { background: #1d2b24; }
@@ -34,3 +34,4 @@ body { font-family: var(--font-sans); transition: background-color .25s ease, co
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
 @media (max-width: 760px) { .nav-actions .nav-cta { display: none; } }
+@media (max-width: 760px) { .home-profile-image { top: 7%; right: 5%; width: 58%; height: 86%; border-radius: 16px; } }
