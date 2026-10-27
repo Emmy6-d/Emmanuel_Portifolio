@@ -9,14 +9,25 @@ export function apiFetch(path, options) {
 }
 
 export async function request(path, options = {}, token) {
-  const response = await apiFetch(`/api${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { 'X-Admin-Token': token } : {}),
-      ...(options.headers || {}),
-    },
-  })
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 12000)
+  let response
+  try {
+    response = await apiFetch(`/api${path}`, {
+      ...options,
+      signal: controller.signal,
+      headers: {
+        ...(options.body && !(options.body instanceof FormData) ? { 'Content-Type': 'application/json' } : {}),
+        ...(token ? { 'X-Admin-Token': token } : {}),
+        ...(options.headers || {}),
+      },
+    })
+  } catch (error) {
+    if (error?.name === 'AbortError') throw new Error('The portfolio service took too long to respond.', { cause: error })
+    throw error
+  } finally {
+    clearTimeout(timeout)
+  }
   const body = await response.json().catch(() => ({}))
   if (!response.ok) {
     const detail = typeof body.detail === 'string'
