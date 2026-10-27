@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Save, Trash2 } from 'lucide-react'
 import { apiFetch, request } from '../api/client.js'
 import { resources } from './config.js'
-import { CompanyLogoEditor, ExperienceImageEditor, ProjectImageEditor } from './ImageEditors.jsx'
+import { CompanyLogoEditor, ExperienceImageEditor, ProjectImageEditor, optimizeImage } from './ImageEditors.jsx'
 import { Panel } from './ListEditor.jsx'
 
 export function RecordEditor({ resource, items, token, reload, message, error }) {
@@ -26,21 +26,21 @@ export function RecordEditor({ resource, items, token, reload, message, error })
       if (resource === 'experiences' && saved.image_urls) setCurrentExperienceImages(saved.image_urls)
       if (resource === 'projects' && imageFile && saved.id) {
         const formData = new FormData()
-        formData.append('file', imageFile)
+        formData.append('file', await optimizeImage(imageFile))
         const response = await apiFetch(`/api/admin/projects/${saved.id}/image`, { method: 'POST', headers: { 'X-Admin-Token': token }, body: formData })
         const result = await response.json().catch(() => ({}))
         if (!response.ok) throw new Error(result.detail || 'Project image upload failed')
       }
       if (resource === 'experiences' && experienceImages.length && saved.id) {
         const formData = new FormData()
-        experienceImages.forEach((file) => formData.append('files', file))
+        for (const file of experienceImages) formData.append('files', await optimizeImage(file))
         const response = await apiFetch(`/api/admin/experiences/${saved.id}/images`, { method: 'POST', headers: { 'X-Admin-Token': token }, body: formData })
         const result = await response.json().catch(() => ({}))
         if (!response.ok) throw new Error(result.detail || 'Experience image upload failed')
       }
       if (resource === 'experiences' && companyLogoFile && saved.id) {
         const formData = new FormData()
-        formData.append('file', companyLogoFile)
+        formData.append('file', await optimizeImage(companyLogoFile))
         const response = await apiFetch(`/api/admin/experiences/${saved.id}/company-logo`, { method: 'POST', headers: { 'X-Admin-Token': token }, body: formData })
         const result = await response.json().catch(() => ({}))
         if (!response.ok) throw new Error(result.detail || 'Company logo upload failed')

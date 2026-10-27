@@ -2,6 +2,19 @@ import { useState } from 'react'
 import { ImagePlus, Trash2, X } from 'lucide-react'
 import { apiFetch } from '../api/client.js'
 
+export async function optimizeImage(file) {
+  if (!file.type.startsWith('image/') || file.type === 'image/svg+xml' || file.type === 'image/webp') return file
+  const bitmap = await createImageBitmap(file)
+  const maxDimension = 1800
+  const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height))
+  const canvas = document.createElement('canvas')
+  canvas.width = Math.max(1, Math.round(bitmap.width * scale))
+  canvas.height = Math.max(1, Math.round(bitmap.height * scale))
+  canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height)
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.82))
+  return blob ? new File([blob], `${file.name.replace(/\.[^.]+$/, '')}.webp`, { type: 'image/webp' }) : file
+}
+
 export function ProfileImageEditor({ imageUrl, token, onChanged, onError }) {
   const [busy, setBusy] = useState(false)
   const upload = async (event) => {
@@ -10,7 +23,7 @@ export function ProfileImageEditor({ imageUrl, token, onChanged, onError }) {
     setBusy(true)
     try {
       const form = new FormData()
-      form.append('file', file)
+      form.append('file', await optimizeImage(file))
       const response = await apiFetch('/api/admin/profile-image', { method: 'POST', headers: { 'X-Admin-Token': token }, body: form })
       const body = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(body.detail || 'Image upload failed')
