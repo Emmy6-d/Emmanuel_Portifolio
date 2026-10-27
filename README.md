@@ -124,6 +124,28 @@ From `backend/`:
 GitHub Actions runs the frontend lint, test, and production build checks and the
 backend Ruff and pytest checks on pushes and pull requests.
 
+## Admin usage
+
+Open `/#admin` on the deployed frontend or `http://localhost:5173/#admin` locally.
+Enter the value configured as `PORTFOLIO_ADMIN_TOKEN` on the backend. The dashboard
+edits the profile, experiences, projects, education, skills, certifications,
+languages, and contact messages. Existing database field names are preserved.
+
+Project images, profile images, company logos, and experience galleries are stored
+in Supabase Storage. Uploads are optional and existing records remain valid when
+an image is absent. Keep the Supabase service-role key and admin token server-side.
+
+## Performance and accessibility notes
+
+The public app is a static Vite build. The portfolio payload is fetched from the
+FastAPI origin configured through `VITE_API_URL`; the frontend uses a timeout,
+safe empty-data defaults, lazy admin loading, responsive image dimensions, and
+reduced-motion support. Public metadata, a manifest, sitemap, and robots file are
+served from `frontend/public`.
+
+For production deployment, set `VITE_API_URL` to the backend origin before the
+Vercel build and include the Vercel origin in the backend `CORS_ORIGINS` value.
+
 ## License
 
 Released under the [MIT License](./LICENSE).

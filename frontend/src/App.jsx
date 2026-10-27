@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { ArrowUpRight, Mail } from 'lucide-react'
 import { request } from './api/client.js'
 import { Header } from './components/Header.jsx'
@@ -8,7 +8,11 @@ import { SkillsPage } from './pages/SkillsPage.jsx'
 import { ExperiencePage } from './pages/ExperiencePage.jsx'
 import { ExperienceDetailPage } from './pages/ExperienceDetailPage.jsx'
 import { ContactPage } from './pages/ContactPage.jsx'
-import { AdminPage } from './admin/AdminPage.jsx'
+const AdminPage = lazy(() => import('./admin/AdminPage.jsx').then((module) => ({ default: module.AdminPage })))
+
+function normalizePortfolio(value) {
+  return { ...value, name: value.name || 'Emmanuel Dushimimana', socials: value.socials || {}, projects: Array.isArray(value.projects) ? value.projects : [], experience: Array.isArray(value.experience) ? value.experience : [], education: Array.isArray(value.education) ? value.education : [], skills: Array.isArray(value.skills) ? value.skills : [], skill_groups: Array.isArray(value.skill_groups) ? value.skill_groups : [], certifications: Array.isArray(value.certifications) ? value.certifications : [], languages: Array.isArray(value.languages) ? value.languages : [], growth_areas: Array.isArray(value.growth_areas) ? value.growth_areas : [], opportunity_tracks: Array.isArray(value.opportunity_tracks) ? value.opportunity_tracks : [] }
+}
 
 export default function App() {
   const [page, setPage] = useState(window.location.hash.slice(1) || 'home')
@@ -19,7 +23,7 @@ export default function App() {
     setLoading(true)
     setError('')
     request('/portfolio')
-      .then(setData)
+      .then((value) => setData(normalizePortfolio(value)))
       .catch((reason) => setError(reason.message))
       .finally(() => setLoading(false))
   }, [])
@@ -36,7 +40,7 @@ export default function App() {
   const selectedExperience = selectedExperienceId && data
     ? data.experience.find((item) => String(item.id) === selectedExperienceId) || (fallbackExperienceIndex ? data.experience[Number(fallbackExperienceIndex[1])] : null)
     : null
-  if (page === 'admin') return <AdminPage />
+  if (page === 'admin') return <Suspense fallback={<main className="shell state-page"><div className="eyebrow">Private area</div><h1>Opening<br /><em>admin.</em></h1></main>}><AdminPage /></Suspense>
   if (loading) return <><Header page={activePage} navigate={navigate} /><main className="shell state-page"><div className="eyebrow">Getting things ready</div><h1>Loading<br /><em>the portfolio.</em></h1></main></>
   if (error || !data) return <><Header page={activePage} navigate={navigate} /><main className="shell state-page"><div className="eyebrow">A brief pause</div><h1>This page is<br /><em>temporarily unavailable.</em></h1><p>{error || 'Please try again in a moment.'}</p><button className="button button-dark" onClick={load}>Try again <ArrowUpRight size={16} /></button></main></>
   return <><Header page={activePage} navigate={navigate} /><main>{page === 'home' && <HomePage data={data} navigate={navigate} />}{page === 'projects' && <ProjectsPage data={data} />}{page === 'skills' && <SkillsPage data={data} />}{page === 'experience' && <ExperiencePage data={data} navigate={navigate} />}{selectedExperienceId && <ExperienceDetailPage experience={selectedExperience} navigate={navigate} />}{page === 'evidence' && <ContactPage data={data} />}</main><footer className="footer shell"><span>© 2026 {data.name}</span><span>Let's Build reliable systems <Mail size={14} /></span></footer></>

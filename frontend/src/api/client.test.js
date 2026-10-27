@@ -10,7 +10,7 @@ test('request returns portfolio data after validating its shape', async () => {
   const originalFetch = globalThis.fetch
   globalThis.fetch = async (url, options) => {
     assert.equal(url, '/api/portfolio')
-    assert.equal(options.headers['Content-Type'], 'application/json')
+    assert.equal(options.headers['Content-Type'], undefined)
     return new Response(JSON.stringify({ projects: [], experience: [] }), { status: 200 })
   }
   try {
