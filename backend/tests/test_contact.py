@@ -14,7 +14,7 @@ def test_contact_rejects_invalid_email():
     response = api_request(
         "POST",
         "/api/contact",
-        json={"name": "Visitor", "email": "not-an-email", "message": "Hello"},
+        json={"name": "Visitor", "email": "not-an-email", "message": "Hello there"},
     )
 
     assert response.status_code == 422
@@ -31,7 +31,7 @@ def test_contact_sends_notification_and_visitor_acknowledgement(monkeypatch):
     response = api_request(
         "POST",
         "/api/contact",
-        json={"name": "Visitor", "email": "visitor@example.com", "message": "Hello"},
+        json={"name": "Visitor", "email": "visitor@example.com", "message": "Hello there"},
     )
 
     assert response.status_code == 200
@@ -50,7 +50,7 @@ def test_contact_acknowledgement_addresses_the_visitor(monkeypatch):
     monkeypatch.setattr(email, "deliver_email", lambda message: sent_emails.append(message) or True)
 
     sent = email.send_contact_acknowledgement(
-        ContactMessage(name="Visitor", email="visitor@example.com", message="Hello")
+        ContactMessage(name="Visitor", email="visitor@example.com", message="Hello there")
     )
 
     assert sent is True

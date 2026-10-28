@@ -37,7 +37,12 @@ for local development, where Vite proxies `/api` to FastAPI.
 
 Run the Supabase schema from [`supabase/schema.sql`](./supabase/schema.sql) in
 the Supabase SQL Editor before starting the API. The SQL file creates tables,
-policies, and storage configuration but does not insert portfolio content.
+policies, and storage configuration but does not insert portfolio content. If
+you are upgrading an existing project, review and apply the prepared migration
+[`supabase/migrations/20261028_harden_contact_writes.sql`](./supabase/migrations/20261028_harden_contact_writes.sql)
+to remove unnecessary anonymous contact inserts and add ordering indexes. Do
+not run database migrations against production without reviewing the target
+project and taking an appropriate backup.
 [`supabase/seed.sql`](./supabase/seed.sql) is intentionally empty of data.
 Create the profile and portfolio records through the admin dashboard.
 
@@ -98,8 +103,8 @@ images. Logos display beside the company name on the experience list and detail
 page; absent logos do not reserve space. Uploaded media is stored in the public
 `portfolio-media` Supabase Storage bucket, with a 5 MB per-image limit.
 
-The public contact form clears on submission and shows success or explanatory
-error feedback for ten seconds. Successful submissions are saved to Supabase;
+The public contact form clears only after a successful submission and shows
+success or explanatory error feedback for ten seconds. Successful submissions are saved to Supabase;
 an email notification is sent to the portfolio owner and an acknowledgement
 is sent to the visitor when SMTP is configured.
 
@@ -140,8 +145,10 @@ an image is absent. Keep the Supabase service-role key and admin token server-si
 The public app is a static Vite build. The portfolio payload is fetched from the
 FastAPI origin configured through `VITE_API_URL`; the frontend uses a timeout,
 safe empty-data defaults, lazy admin loading, responsive image dimensions, and
-reduced-motion support. Public metadata, a manifest, sitemap, and robots file are
-served from `frontend/public`.
+reduced-motion support. Public metadata, an absolute social preview image, a
+manifest, sitemap, and robots file are served from `frontend/public`. The API
+validates uploaded image signatures, permitted formats, file size, and
+dimensions rather than trusting the browser-provided MIME type.
 
 For production deployment, set `VITE_API_URL` to the backend origin before the
 Vercel build and include the Vercel origin in the backend `CORS_ORIGINS` value.

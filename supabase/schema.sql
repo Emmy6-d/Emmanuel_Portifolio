@@ -25,6 +25,22 @@ create table if not exists public.profile (
 alter table public.profile add column if not exists profile_image_url text;
 alter table public.profile add column if not exists profile_image_path text;
 
+create or replace function public.set_profile_updated_at()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists profile_updated_at on public.profile;
+create trigger profile_updated_at
+before update on public.profile
+for each row execute function public.set_profile_updated_at();
+
 insert into storage.buckets (id, name, public)
 values ('portfolio-media', 'portfolio-media', true)
 on conflict (id) do update set public = true;
@@ -136,13 +152,11 @@ create policy "public can read education" on public.education for select using (
 create policy "public can read skills" on public.skills for select using (true);
 create policy "public can read certifications" on public.certifications for select using (true);
 create policy "public can read languages" on public.languages for select using (true);
-create policy "anyone can submit contacts" on public.contacts for insert with check (true);
 drop policy if exists "public can read portfolio media" on storage.objects;
 create policy "public can read portfolio media" on storage.objects for select using (bucket_id = 'portfolio-media');
 
 -- Supabase SQL Editor can create tables without the grants needed by the API role.
 grant usage on schema public to anon, authenticated, service_role;
 grant select on public.profile, public.experiences, public.projects, public.education, public.skills, public.certifications, public.languages to anon, authenticated, service_role;
-grant insert on public.contacts to anon, authenticated, service_role;
 grant all privileges on public.profile, public.experiences, public.projects, public.education, public.skills, public.certifications, public.languages, public.contacts to service_role;
-grant usage, select on all sequences in schema public to anon, authenticated, service_role;
+grant usage, select on all sequences in schema public to service_role;

@@ -5,6 +5,8 @@ from fastapi import Header, HTTPException, status
 from app.core import config
 from app.core.config import TABLES, supabase
 
+SORTED_TABLES = {"experiences", "projects", "education", "skills", "certifications", "languages"}
+
 
 def normalize_row(row: dict):
     result = dict(row)
@@ -20,7 +22,12 @@ def normalize_row(row: dict):
 def rows(table: str):
     if table not in TABLES:
         raise HTTPException(status_code=404, detail="Unknown resource")
-    result = supabase.table(table).select("*").order("id").execute()
+    query = supabase.table(table).select("*")
+    result = (
+        query.order("sort_order").order("id").execute()
+        if table in SORTED_TABLES
+        else query.order("created_at", desc=True).execute()
+    )
     return [normalize_row(row) for row in (result.data or [])]
 
 

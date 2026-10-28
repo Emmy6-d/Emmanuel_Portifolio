@@ -25,7 +25,6 @@ export function ContactPage({ data }) {
     const isValid = form.checkValidity()
     const validationMessage = form.querySelector(':invalid')?.validationMessage
     const values = Object.fromEntries(new FormData(form))
-    form.reset()
     clearTimeout(feedbackTimeout.current)
     setFeedback(null)
 
@@ -38,6 +37,7 @@ export function ContactPage({ data }) {
     setIsSubmitting(true)
     try {
       const result = await request('/contact', { method: 'POST', body: JSON.stringify(values) })
+      form.reset()
       showFeedback(
         'success',
         result.acknowledgement_sent

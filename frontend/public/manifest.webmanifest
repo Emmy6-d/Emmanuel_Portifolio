@@ -3,7 +3,7 @@
   "short_name": "Emmanuel Dushimimana",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f4f5f0",
-  "theme_color": "#17211d",
-  "description": "IoT and embedded systems engineering portfolio."
+  "background_color": "#07111f",
+  "theme_color": "#07111f",
+  "description": "Embedded systems and IoT engineering portfolio."
 }

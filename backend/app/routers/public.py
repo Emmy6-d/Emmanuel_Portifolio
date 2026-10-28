@@ -1,4 +1,7 @@
-from fastapi import APIRouter, HTTPException
+from collections import defaultdict, deque
+from time import monotonic
+
+from fastapi import APIRouter, HTTPException, Request
 
 from app.core.config import supabase
 from app.schemas import ContactMessage
@@ -6,6 +9,9 @@ from app.services.data import normalize_row, rows, skill_groups
 from app.services.email import send_contact_acknowledgement, send_contact_notification
 
 router = APIRouter()
+CONTACT_WINDOW_SECONDS = 3600
+CONTACT_LIMIT = 5
+contact_attempts: defaultdict[str, deque[float]] = defaultdict(deque)
 
 
 @router.get("/api/portfolio")
@@ -25,8 +31,18 @@ def get_portfolio():
 
 
 @router.post("/api/contact")
-def create_contact(message: ContactMessage):
-    supabase.table("contacts").insert(message.model_dump()).execute()
+def create_contact(message: ContactMessage, request: Request):
+    if message.website:
+        return {"ok": True, "message": "Thanks, your message was received."}
+    client_key = request.client.host if request.client else "unknown"
+    now = monotonic()
+    attempts = contact_attempts[client_key]
+    while attempts and now - attempts[0] > CONTACT_WINDOW_SECONDS:
+        attempts.popleft()
+    if len(attempts) >= CONTACT_LIMIT:
+        raise HTTPException(status_code=429, detail="Too many messages from this address. Please try again later.")
+    attempts.append(now)
+    supabase.table("contacts").insert(message.model_dump(exclude={"website"})).execute()
     email_sent = send_contact_notification(message)
     acknowledgement_sent = send_contact_acknowledgement(message)
     return {

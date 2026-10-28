@@ -22,14 +22,18 @@ def update_profile(profile: ProfileUpdate):
 
 @router.post("/api/admin/profile-image", dependencies=[Depends(require_admin)])
 async def upload_profile_image(file: UploadFile = File(...)):
-    content = await read_image(file)
-    path = image_path("profile", file.filename)
+    image = await read_image(file)
+    path = image_path("profile", f"upload{image.extension}")
     current = supabase.table("profile").select("profile_image_path").eq("id", 1).limit(1).execute()
     old_path = current.data[0].get("profile_image_path") if current.data else None
+    try:
+        image_url = upload_image(path, image.content, image.content_type)
+        supabase.table("profile").update({"profile_image_url": image_url, "profile_image_path": path}).eq("id", 1).execute()
+    except Exception:
+        delete_images([path])
+        raise
     if old_path:
         delete_images([old_path])
-    image_url = upload_image(path, content, file.content_type)
-    supabase.table("profile").update({"profile_image_url": image_url, "profile_image_path": path}).eq("id", 1).execute()
     return {"profile_image_url": image_url}
 
 
@@ -45,16 +49,20 @@ def delete_profile_image():
 
 @router.post("/api/admin/projects/{project_id}/image", dependencies=[Depends(require_admin)])
 async def upload_project_image(project_id: int, file: UploadFile = File(...)):
-    content = await read_image(file)
+    image = await read_image(file)
     current = supabase.table("projects").select("id,image_path").eq("id", project_id).limit(1).execute()
     if not current.data:
         raise HTTPException(status_code=404, detail="Project not found")
     old_path = current.data[0].get("image_path")
+    path = image_path(f"projects/{project_id}", f"upload{image.extension}")
+    try:
+        image_url = upload_image(path, image.content, image.content_type)
+        supabase.table("projects").update({"image_url": image_url, "image_path": path}).eq("id", project_id).execute()
+    except Exception:
+        delete_images([path])
+        raise
     if old_path:
         delete_images([old_path])
-    path = image_path(f"projects/{project_id}", file.filename)
-    image_url = upload_image(path, content, file.content_type)
-    supabase.table("projects").update({"image_url": image_url, "image_path": path}).eq("id", project_id).execute()
     return {"image_url": image_url}
 
 
@@ -85,16 +93,19 @@ async def upload_experience_images(experience_id: int, files: list[UploadFile] =
 
     image_content = []
     for file in files:
-        content = await read_image(file)
-        image_content.append((file, content))
+        image_content.append(await read_image(file))
 
     uploaded_paths = []
-    for file, content in image_content:
-        path = image_path(f"experiences/{experience_id}", file.filename)
-        uploaded_paths.append(path)
-        image_urls.append(upload_image(path, content, file.content_type))
-    image_paths.extend(uploaded_paths)
-    supabase.table("experiences").update({"image_urls": image_urls, "image_paths": image_paths}).eq("id", experience_id).execute()
+    try:
+        for image in image_content:
+            path = image_path(f"experiences/{experience_id}", f"upload{image.extension}")
+            image_urls.append(upload_image(path, image.content, image.content_type))
+            uploaded_paths.append(path)
+        image_paths.extend(uploaded_paths)
+        supabase.table("experiences").update({"image_urls": image_urls, "image_paths": image_paths}).eq("id", experience_id).execute()
+    except Exception:
+        delete_images(uploaded_paths)
+        raise
     return {"image_urls": image_urls}
 
 
@@ -117,13 +128,13 @@ def delete_experience_image(experience_id: int, image_index: int):
 
 @router.post("/api/admin/experiences/{experience_id}/company-logo", dependencies=[Depends(require_admin)])
 async def upload_experience_company_logo(experience_id: int, file: UploadFile = File(...)):
-    content = await read_image(file)
+    image = await read_image(file)
     current = supabase.table("experiences").select("id,company_logo_path").eq("id", experience_id).limit(1).execute()
     if not current.data:
         raise HTTPException(status_code=404, detail="Experience not found")
     old_path = current.data[0].get("company_logo_path")
-    path = image_path(f"experiences/{experience_id}", f"company-logo-{file.filename or 'logo'}", ".img")
-    logo_url = upload_image(path, content, file.content_type)
+    path = image_path(f"experiences/{experience_id}", f"company-logo{image.extension}")
+    logo_url = upload_image(path, image.content, image.content_type)
     supabase.table("experiences").update({"company_logo_url": logo_url, "company_logo_path": path}).eq("id", experience_id).execute()
     if old_path:
         delete_images([old_path])
